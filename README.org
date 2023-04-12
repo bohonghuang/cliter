@@ -1,0 +1,98 @@
+#+TITLE: cliter
+A simple closure-based iterator library for Common Lisp.
+* Usage
+In this library, an iterator is a closure that returns an element and a value to predicate its existence (non-nil value).
+So creating a list iterator is very simple:
+
+#+BEGIN_SRC lisp
+  (defun list-iterator (list)
+    (declare (type list list))
+    (setf list (cons nil list))
+    (lambda ()
+      (setf list (cdr list))
+      (values (car list) list)))
+
+  (let ((iter (list-iterator '(1 2 3))))
+    (print (multiple-value-list (funcall iter)))  ; => (1 (1 2 3)) 
+    (print (multiple-value-list (funcall iter)))  ; => (2 (2 3))
+    (print (multiple-value-list (funcall iter)))  ; => (3 (3))
+    (print (multiple-value-list (funcall iter)))) ; => (NIL NIL)
+#+END_SRC
+
+Or we can create a iterator with [[https://cl-cont.common-lisp.dev/][cl-cont]]:
+
+#+BEGIN_SRC lisp
+  (cont:defun/cc hash-table-iterator (table)
+    (let (next-element generate)
+      (setf next-element (lambda (return-cc)
+                           (declare (type function return-cc))
+                           (loop :for key :being :the hash-key :in table :using (hash-value value)
+                                 :do (setf return-cc (cont:call/cc
+                                                      (lambda (next-cc)
+                                                        (setf next-element next-cc)
+                                                        (funcall return-cc (cons key value) t)))))
+                           (funcall return-cc nil nil))
+            generate (lambda () (cont:call/cc next-element)))
+      (values generate)))
+
+  (let ((iter (hash-table-iterator (alexandria:alist-hash-table '((a . 1)
+                                                                  (b . 2)
+                                                                  (c . 3))))))
+    (print (multiple-value-list (funcall iter)))  ; => ((B . 2) T)
+    (print (multiple-value-list (funcall iter)))  ; => ((C . 3) T)
+    (print (multiple-value-list (funcall iter)))  ; => ((A . 1) T)
+    (print (multiple-value-list (funcall iter)))) ; => (NIL NIL)
+#+END_SRC
+
+~cliter~ defines a collection of functions for manipulating this kind of iterator, with names similar to those of the built-in functions in Common Lisp:
+
+#+BEGIN_SRC lisp
+  (cliter:iterator-list
+   (cliter:subseq
+    (cliter:mapcar
+     #'1+
+     (cliter:append
+      (cliter:list-iterator '(1 2 3))
+      (cliter:vector-iterator #(4 5 6))))
+    1 4)) ; => (3 4 5)
+#+END_SRC
+
+We can also implement an infinite number sequence generator with ~cl-cont~:
+
+#+BEGIN_SRC lisp
+  (cont:defun/cc index-generator (from)
+    (let (next-element generate)
+      (setf next-element (lambda (return-cc)
+                           (declare (type function return-cc))
+                           (loop :for i :from from
+                                 :do (setf return-cc (cont:call/cc
+                                                      (lambda (next-cc)
+                                                        (setf next-element next-cc)
+                                                        (funcall return-cc i t))))))
+            generate (lambda () (cont:call/cc next-element)))
+      (values generate)))
+
+  (cont:defun/cc fibonacci-generator ()
+    (let (next-element generate)
+      (setf next-element (lambda (return-cc)
+                           (declare (type function return-cc))
+                           (loop :for fib[n-2] := 1 :then fib[n-1]
+                                 :for fib[n-1] := 1 :then fib[n]
+                                 :for fib[n] := 1 :then (+ fib[n-1] fib[n-2])
+                                 :do (setf return-cc (cont:call/cc
+                                                      (lambda (next-cc)
+                                                        (setf next-element next-cc)
+                                                        (funcall return-cc fib[n] t))))))
+            generate (lambda () (cont:call/cc next-element)))
+      (values generate)))
+
+  (cliter:iterator-list
+   (cliter:take
+    (cliter:mapcar
+     #'cons
+     (index-generator 1)
+     (fibonacci-generator))
+    10)) ; => ((1 . 1) (2 . 2) (3 . 3) (4 . 5) (5 . 8) (6 . 13) (7 . 21) (8 . 34) (9 . 55) (10 . 89)) 
+#+END_SRC
+
+For more usage examples, please refer to the tests in [[file:test.lisp][test.lisp]].
