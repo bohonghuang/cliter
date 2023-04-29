@@ -2,6 +2,7 @@
   (:use #:cl #:alexandria)
   (:shadow
    #:length
+   #:nth
    #:map
    #:mapc
    #:mapcar
@@ -59,7 +60,8 @@
    #:drop-while
    #:take-while
    #:take-until
-   #:length))
+   #:length
+   #:nth))
 
 (in-package #:cliter)
 
@@ -233,6 +235,13 @@
 (declaim (ftype (function (iterator) (values non-negative-fixnum)) length))
 (defun length (iterator)
   (count-if (constantly t) iterator))
+
+(declaim (ftype (function (non-negative-fixnum iterator) (values t)) nth))
+(defun nth (n iterator &aux (i 0))
+  (declare (type non-negative-fixnum i))
+  (doiter (elem iterator)
+    (when (= i n) (return-from nth elem))
+    (incf i)))
 
 (declaim (ftype (function (t iterator &key (:key function) (:test function)) (values integer)) count))
 (defun count (item iterator &key (key #'identity) (test #'eql))

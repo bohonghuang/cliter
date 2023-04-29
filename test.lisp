@@ -23,6 +23,10 @@
     (is-values (cliter:next iter) (eql nil) (eql nil)))
   (is equalp #(1 2 3) (cliter:iterator-vector (cliter:vector-iterator #(1 2 3)))))
 
+(define-test length-nth :parent suite
+  (is = 2 (cliter:nth 1 (cliter:vector-iterator #(1 2 3))))
+  (is = 3 (cliter:length (cliter:vector-iterator #(1 2 3)))))
+
 (define-test map :parent suite
   (let ((iter1 (cliter:vector-iterator #(1 2 3)))
         (iter2 (cliter:list-iterator '(7 6 5 4))))
