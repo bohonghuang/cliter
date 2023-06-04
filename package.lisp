@@ -22,7 +22,18 @@
    #:append
    #:reduce
    #:remove-duplicates
-   #:subseq)
+   #:subseq
+   #:first
+   #:second
+   #:third
+   #:fourth
+   #:fifth
+   #:sixth
+   #:seventh
+   #:eighth
+   #:ninth
+   #:tenth
+   #:lastcar)
   (:export
    #:iterator
    #:function-iterator
@@ -61,7 +72,18 @@
    #:take-while
    #:take-until
    #:length
-   #:nth))
+   #:nth
+   #:first
+   #:second
+   #:third
+   #:fourth
+   #:fifth
+   #:sixth
+   #:seventh
+   #:eighth
+   #:ninth
+   #:tenth
+   #:lastcar))
 
 (in-package #:cliter)
 
@@ -242,6 +264,61 @@
   (doiter (elem iterator)
     (when (= i n) (return-from nth elem))
     (incf i)))
+
+(declaim (ftype (function (iterator) (values t)) first)
+         (inline first))
+(defun first (iterator)
+  (nth 0 iterator))
+
+(declaim (ftype (function (iterator) (values t)) second)
+         (inline second))
+(defun second (iterator)
+  (nth 1 iterator))
+
+(declaim (ftype (function (iterator) (values t)) third)
+         (inline third))
+(defun third (iterator)
+  (nth 2 iterator))
+
+(declaim (ftype (function (iterator) (values t)) fourth)
+         (inline fourth))
+(defun fourth (iterator)
+  (nth 3 iterator))
+
+(declaim (ftype (function (iterator) (values t)) fifth)
+         (inline fifth))
+(defun fifth (iterator)
+  (nth 4 iterator))
+
+(declaim (ftype (function (iterator) (values t)) sixth)
+         (inline sixth))
+(defun sixth (iterator)
+  (nth 5 iterator))
+
+(declaim (ftype (function (iterator) (values t)) seventh)
+         (inline seventh))
+(defun seventh (iterator)
+  (nth 6 iterator))
+
+(declaim (ftype (function (iterator) (values t)) eighth)
+         (inline eighth))
+(defun eighth (iterator)
+  (nth 7 iterator))
+
+(declaim (ftype (function (iterator) (values t)) ninth)
+         (inline ninth))
+(defun ninth (iterator)
+  (nth 8 iterator))
+
+(declaim (ftype (function (iterator) (values t)) tenth)
+         (inline tenth))
+(defun tenth (iterator)
+  (nth 9 iterator))
+
+(declaim (ftype (function (iterator) (values t)) lastcar))
+(defun lastcar (iterator &aux last)
+  (doiter (elem iterator last)
+    (setf last elem)))
 
 (declaim (ftype (function (t iterator &key (:key function) (:test function)) (values integer)) count))
 (defun count (item iterator &key (key #'identity) (test #'eql))
